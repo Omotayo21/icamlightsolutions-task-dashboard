@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "icamlightsolutions | Operational Tracker",
+  title: "Icamlightsolutions | Operational Tracker",
   description: "Internal operational and accountability tracking dashboard for icamlightsolutions.",
 };
 

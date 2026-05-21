@@ -33,7 +33,7 @@ export default function DashboardLayout({ children, stats }) {
             onClick={() => router.push('/dashboard')}
           >
             <span className="text-xl font-black tracking-tight text-blue-600 hover:opacity-90 transition-opacity">
-              icamlightsolutions
+              Icamlightsolutions
             </span>
           </div>
 
