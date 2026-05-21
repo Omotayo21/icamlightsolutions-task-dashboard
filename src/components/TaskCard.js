@@ -148,7 +148,7 @@ export default function TaskCard({ task, onUpdateStatus, onEditTask }) {
 
         {/* Description (not editable, just displayed) */}
         {!isEditing && task.description && (
-          <p className={`text-xs text-slate-500 break-words leading-normal line-clamp-2 ${
+          <p className={`text-xs text-slate-500 break-words leading-normal  ${
             isCompleted ? 'line-through' : ''
           }`}>
             {task.description}
@@ -209,7 +209,7 @@ export default function TaskCard({ task, onUpdateStatus, onEditTask }) {
                 <button
                   onClick={handleStartEdit}
                   title="Edit task"
-                  className="p-1 rounded-lg text-slate-300 hover:text-blue-600 hover:bg-blue-50 opacity-0 group-hover:opacity-100 transition-all"
+                  className=" flex p-1 rounded-lg text-slate-300 hover:text-blue-600 hover:bg-blue-50 opacity-100 group-hover:opacity-100 transition-all"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
