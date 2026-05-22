@@ -3,13 +3,13 @@
 import React from 'react';
 import { useUser } from './UserContext';
 import { useRouter } from 'next/navigation';
-import { 
-  LogOut, 
-  CheckCircle, 
-  Clock, 
-  DollarSign, 
-  TrendingUp, 
-  Layers 
+import {
+  LogOut,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  TrendingUp,
+  Layers
 } from 'lucide-react';
 
 export default function DashboardLayout({ children, stats }) {
@@ -26,15 +26,25 @@ export default function DashboardLayout({ children, stats }) {
       {/* Header */}
       <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/95 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          
+
           {/* Logo */}
-          <div 
-            className="flex items-center cursor-pointer space-x-2" 
-            onClick={() => router.push('/dashboard')}
-          >
-            <span className="text-xl font-black tracking-tight text-blue-600 hover:opacity-90 transition-opacity">
-              Icamlightsolutions
-            </span>
+          <div className="flex items-center space-x-4">
+            {/* Logo – keep existing behaviour */}
+            <div
+              className="flex items-center cursor-pointer space-x-2"
+              onClick={() => router.push('/dashboard')}
+            >
+              <span className="text-xl font-black tracking-tight text-blue-600 hover:opacity-90 transition-opacity">
+                iCamlight Solutions
+              </span>
+            </div>
+            {/* New Upload tab */}
+            <button
+              onClick={() => router.push('/upload')}
+              className="rounded-xl bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200 transition"
+            >
+              Files
+            </button>
           </div>
 
           {/* User Profile / Switch */}

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+/*import mongoose from 'mongoose';
 
 const ActivityLogSchema = new mongoose.Schema({
   action: {
@@ -18,3 +18,4 @@ const ActivityLogSchema = new mongoose.Schema({
 });
 
 export default mongoose.models.ActivityLog || mongoose.model('ActivityLog', ActivityLogSchema);
+*/

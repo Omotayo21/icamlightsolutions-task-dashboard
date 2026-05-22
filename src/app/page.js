@@ -48,7 +48,7 @@ export default function Home() {
             Internal Operations Portal
           </span>
           <h1 className="text-3xl font-extrabold tracking-tight text-blue-600 mb-2">
-            Icamlightsolutions
+            iCamlight Solutions
           </h1>
           <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
             Welcome to the shared activity workspace. Choose your profile to begin tracking team goals.
