@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Announcement from '@/lib/models/Announcement';
-import ActivityLog from '@/lib/models/ActivityLog';
+
 
 export async function GET() {
   try {
@@ -32,12 +32,7 @@ export async function POST(request) {
       createdBy
     });
 
-    await ActivityLog.create({
-      action: 'Post Announcement',
-      details: `posted announcement: "${title}"`,
-      performedBy: createdBy
-    });
-
+   
     return NextResponse.json(newAnnouncement, { status: 201 });
   } catch (error) {
     console.error('API Announcements POST error:', error);

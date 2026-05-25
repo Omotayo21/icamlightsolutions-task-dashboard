@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Goal from '@/lib/models/Goal';
-import ActivityLog from '@/lib/models/ActivityLog';
+
 
 export async function GET(request) {
   try {
@@ -37,11 +37,7 @@ export async function POST(request) {
       createdBy
     });
 
-    await ActivityLog.create({
-      action: 'Create Goal',
-      details: `added a monthly goal: "${title}"`,
-      performedBy: createdBy
-    });
+   
 
     return NextResponse.json(newGoal, { status: 201 });
   } catch (error) {
@@ -76,11 +72,7 @@ export async function PUT(request) {
       details = `reopened monthly goal: "${goal.title}"`;
     }
 
-    await ActivityLog.create({
-      action: 'Update Goal',
-      details,
-      performedBy: updatedBy
-    });
+    
 
     return NextResponse.json(goal);
   } catch (error) {

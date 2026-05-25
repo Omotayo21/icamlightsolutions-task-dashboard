@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Task from '@/lib/models/Task';
-import ActivityLog from '@/lib/models/ActivityLog';
+
 
 export async function GET(request) {
   try {
@@ -44,13 +44,7 @@ export async function POST(request) {
       createdBy
     });
 
-    // Log the activity
-    const assigneesText = assignedStaff.length > 0 ? ` and assigned it to ${assignedStaff.join(', ')}` : '';
-    await ActivityLog.create({
-      action: 'Create Task',
-      details: `created task "${title}" in ${category}${assigneesText}`,
-      performedBy: createdBy
-    });
+   
 
     return NextResponse.json(newTask, { status: 201 });
   } catch (error) {

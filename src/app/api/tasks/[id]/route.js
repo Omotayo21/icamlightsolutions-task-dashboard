@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Task from '@/lib/models/Task';
-import ActivityLog from '@/lib/models/ActivityLog';
 
 export async function PUT(request, { params }) {
   try {
@@ -40,11 +39,7 @@ export async function PUT(request, { params }) {
       details = `marked task "${task.title}" as ${status.toLowerCase()}`;
     }
 
-    await ActivityLog.create({
-      action,
-      details,
-      performedBy: updatedBy || 'System'
-    });
+   
 
     return NextResponse.json(task);
   } catch (error) {
