@@ -1,11 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const UserContext = createContext({
   user: null,
-  login: () => {},
-  logout: () => {},
+  login: async () => {},
+  signup: async () => {},
+  logout: async () => {},
   loading: true
 });
 
@@ -14,38 +15,66 @@ export function UserProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('icam_user');
-      if (storedUser) {
-        setUser(storedUser);
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
+      } catch (e) {
+        console.error('Auth check failed', e);
+      } finally {
+        setLoading(false);
       }
+    };
+    checkAuth();
+  }, []);
+
+  const login = async (email, password) => {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Login failed');
+    }
+    const data = await res.json();
+    setUser(data.user);
+    return data.user;
+  };
+
+  const signup = async (name, email, password) => {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name, email, password })
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Signup failed');
+    }
+    const data = await res.json();
+    setUser(data.user);
+    return data.user;
+  };
+
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (e) {
-      console.error('Failed to read from localStorage', e);
+      console.error('Logout error', e);
     } finally {
-      setLoading(false);
+      setUser(null);
     }
   }, []);
 
-  const login = (name) => {
-    setUser(name);
-    try {
-      localStorage.setItem('icam_user', name);
-    } catch (e) {
-      console.error('Failed to write to localStorage', e);
-    }
-  };
-
-  const logout = () => {
-    setUser(null);
-    try {
-      localStorage.removeItem('icam_user');
-    } catch (e) {
-      console.error('Failed to remove from localStorage', e);
-    }
-  };
-
   return (
-    <UserContext.Provider value={{ user, login, logout, loading }}>
+    <UserContext.Provider value={{ user, login, signup, logout, loading }}>
       {children}
     </UserContext.Provider>
   );

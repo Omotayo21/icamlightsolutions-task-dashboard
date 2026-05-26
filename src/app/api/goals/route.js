@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Goal from '@/lib/models/Goal';
-
+import { getAuthenticatedUser } from '@/lib/auth';
 
 export async function GET(request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month');
@@ -23,21 +28,24 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
     const body = await request.json();
-    const { title, month, createdBy } = body;
+    const { title, month } = body;
 
-    if (!title || !month || !createdBy) {
+    if (!title || !month) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const newGoal = await Goal.create({
       title,
       month,
-      createdBy
+      createdBy: authUser.name
     });
-
-   
 
     return NextResponse.json(newGoal, { status: 201 });
   } catch (error) {
@@ -48,11 +56,16 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
     const body = await request.json();
-    const { id, status, updatedBy } = body;
+    const { id, status } = body;
 
-    if (!id || !status || !updatedBy) {
+    if (!id || !status) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -61,18 +74,8 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
     }
 
-    const oldStatus = goal.status;
     goal.status = status;
     await goal.save();
-
-    let details = `updated goal "${goal.title}"`;
-    if (status === 'Completed' && oldStatus !== 'Completed') {
-      details = `completed monthly goal: "${goal.title}"`;
-    } else if (status === 'Pending' && oldStatus === 'Completed') {
-      details = `reopened monthly goal: "${goal.title}"`;
-    }
-
-    
 
     return NextResponse.json(goal);
   } catch (error) {

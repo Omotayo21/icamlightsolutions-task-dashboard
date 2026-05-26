@@ -16,10 +16,13 @@ export default function DashboardLayout({ children, stats }) {
   const { user, logout } = useUser();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push('/');
   };
+
+  const displayName = user?.name || 'User';
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans select-none antialiased">
@@ -29,7 +32,6 @@ export default function DashboardLayout({ children, stats }) {
 
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            {/* Logo – keep existing behaviour */}
             <div
               className="flex items-center cursor-pointer space-x-2"
               onClick={() => router.push('/dashboard')}
@@ -38,7 +40,6 @@ export default function DashboardLayout({ children, stats }) {
                 iCamlight Solutions
               </span>
             </div>
-            {/* New Upload tab */}
             <button
               onClick={() => router.push('/upload')}
               className="rounded-xl bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-200 transition"
@@ -47,21 +48,21 @@ export default function DashboardLayout({ children, stats }) {
             </button>
           </div>
 
-          {/* User Profile / Switch */}
+          {/* User Profile / Logout */}
           {user && (
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-1.5 shadow-sm">
                 <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white uppercase">
-                  {user.charAt(0)}
+                  {initial}
                 </div>
                 <span className="text-sm font-semibold text-slate-700">
-                  {user}
+                  {displayName}
                 </span>
               </div>
 
               <button
                 onClick={handleLogout}
-                title="Switch User"
+                title="Sign Out"
                 className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-slate-100 border border-slate-200 transition-all duration-200"
               >
                 <LogOut className="w-4 h-4" />

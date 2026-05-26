@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Calendar, Users, AlertCircle } from 'lucide-react';
-import { STAFF_MEMBERS, CATEGORIES, WEEKS } from '../lib/config';
+import { X, Calendar, Users, AlertCircle, Plus, XCircle } from 'lucide-react';
+import { CATEGORIES, WEEKS } from '../lib/config';
 
 export default function TaskModal({ isOpen, onClose, onSave, activeUser }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignedStaff, setAssignedStaff] = useState([]);
+  const [assigneeInput, setAssigneeInput] = useState('');
   const [category, setCategory] = useState('General');
   const [week, setWeek] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -15,11 +16,22 @@ export default function TaskModal({ isOpen, onClose, onSave, activeUser }) {
 
   if (!isOpen) return null;
 
-  const handleToggleStaff = (staff) => {
-    if (assignedStaff.includes(staff)) {
-      setAssignedStaff(assignedStaff.filter((s) => s !== staff));
-    } else {
-      setAssignedStaff([...assignedStaff, staff]);
+  const handleAddAssignee = () => {
+    const name = assigneeInput.trim();
+    if (name && !assignedStaff.includes(name)) {
+      setAssignedStaff([...assignedStaff, name]);
+      setAssigneeInput('');
+    }
+  };
+
+  const handleRemoveAssignee = (name) => {
+    setAssignedStaff(assignedStaff.filter((s) => s !== name));
+  };
+
+  const handleAssigneeKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddAssignee();
     }
   };
 
@@ -48,6 +60,7 @@ export default function TaskModal({ isOpen, onClose, onSave, activeUser }) {
     setTitle('');
     setDescription('');
     setAssignedStaff([]);
+    setAssigneeInput('');
     setCategory('General');
     setWeek('');
     setDueDate('');
@@ -58,9 +71,9 @@ export default function TaskModal({ isOpen, onClose, onSave, activeUser }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         onClick={onClose}
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
       />
 
       {/* Modal Container */}
@@ -71,7 +84,7 @@ export default function TaskModal({ isOpen, onClose, onSave, activeUser }) {
             <span className="w-2.5 h-2.5 rounded-full bg-blue-600 mr-2" />
             Add New Operational Task
           </h3>
-          <button 
+          <button
             onClick={onClose}
             className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
@@ -117,31 +130,48 @@ export default function TaskModal({ isOpen, onClose, onSave, activeUser }) {
             />
           </div>
 
-          {/* Assignees */}
+          {/* Assignees - free-text input */}
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center">
               <Users className="w-3.5 h-3.5 mr-1" />
               Assign Staff Members
             </label>
-            <div className="flex flex-wrap gap-2">
-              {STAFF_MEMBERS.map((staff) => {
-                const isSelected = assignedStaff.includes(staff);
-                return (
-                  <button
-                    type="button"
-                    key={staff}
-                    onClick={() => handleToggleStaff(staff)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                      isSelected 
-                        ? 'bg-blue-50 border-blue-200 text-blue-600' 
-                        : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'
-                    }`}
-                  >
-                    {staff}
-                  </button>
-                );
-              })}
+            <div className="flex space-x-2 mb-2">
+              <input
+                type="text"
+                value={assigneeInput}
+                onChange={(e) => setAssigneeInput(e.target.value)}
+                onKeyDown={handleAssigneeKeyDown}
+                placeholder="Type a name and press Enter"
+                className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 placeholder-slate-400 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={handleAddAssignee}
+                className="p-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
             </div>
+            {assignedStaff.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {assignedStaff.map((staff) => (
+                  <span
+                    key={staff}
+                    className="flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 border border-blue-200 text-blue-600"
+                  >
+                    <span>{staff}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAssignee(staff)}
+                      className="text-blue-400 hover:text-rose-500 transition-colors"
+                    >
+                      <XCircle className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Grid Category, Week, Date */}

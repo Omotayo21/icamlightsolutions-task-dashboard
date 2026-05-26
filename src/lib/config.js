@@ -1,13 +1,3 @@
-export const STAFF_MEMBERS = [
-  'Ernest',
-  'Solomon',
-  'Elohor',
-  'Abdulrahman',
-  'Joy',
-  'Isaac',
-  'Mubaraq'
-];
-
 export const CATEGORIES = [
   'Marketing',
   'Client Work',

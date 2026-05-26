@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import File from '@/lib/models/file';
+import { getAuthenticatedUser } from '@/lib/auth';
 
 export async function GET(request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
 
     await dbConnect();
 
-    // Case-insensitive search on the custom name field
     const filter = search
       ? { name: { $regex: search, $options: 'i' } }
       : {};
@@ -22,7 +27,7 @@ export async function GET(request) {
     const payload = files.map((f) => ({
       _id: f._id,
       name: f.name,
-       originalName: f.originalName,
+      originalName: f.originalName,
       cloudinaryUrl: f.cloudinaryUrl,
       mimeType: f.mimeType,
       size: f.size,

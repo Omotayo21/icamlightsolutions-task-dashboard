@@ -105,7 +105,7 @@ export default function Dashboard() {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus, updatedBy: user })
+        body: JSON.stringify({ status: newStatus })
       });
       if (res.ok) {
         await fetchData(true);
@@ -124,7 +124,7 @@ export default function Dashboard() {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...fields, updatedBy: user })
+        body: JSON.stringify(fields)
       });
       if (res.ok) {
         await fetchData(true);

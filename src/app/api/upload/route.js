@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import dbConnect from '@/lib/db';
-import File from '@/lib/models/file';
+import FileModel from '@/lib/models/file';
+import { getAuthenticatedUser } from '@/lib/auth';
 
-// Configure Cloudinary from .env.local
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -12,29 +12,34 @@ cloudinary.config({
 
 export async function POST(request) {
   try {
-    // Next.js App Router natively parses multipart/form-data — NO multer needed
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const formData = await request.formData();
-    const file = formData.get('file');  // Web API File / Blob
-    const name = formData.get('name'); 
-    console.log('FILE DEBUG:', {
-  type: typeof file,
-  constructor: file?.constructor?.name,
-  name: file?.name,
-  keys: file ? Object.keys(file) : null,
-})
-    const originalName = file instanceof File ? file.name : (file?.name ?? '');
-    if (!file || !name) {
+    const uploadedFile = formData.get('file');
+    const name = formData.get('name');
+
+    if (!uploadedFile || !name) {
       return NextResponse.json(
         { error: 'Both a file and a name are required.' },
         { status: 400 }
       );
     }
 
-    // Convert Web API Blob → Node Buffer so we can pipe to Cloudinary
-    const arrayBuffer = await file.arrayBuffer();
+    // Check if uploadedFile is a Web API File/Blob
+    if (typeof uploadedFile !== 'object' || !(uploadedFile.stream && typeof uploadedFile.arrayBuffer === 'function')) {
+      return NextResponse.json({ error: 'Invalid file upload' }, { status: 400 });
+    }
+
+    const originalName = uploadedFile.name || '';
+    const mimeType = uploadedFile.type || 'application/octet-stream';
+    const size = uploadedFile.size || 0;
+
+    const arrayBuffer = await uploadedFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Stream buffer to Cloudinary (resource_type: 'auto' accepts any file type)
     const uploadResult = await new Promise((resolve, reject) => {
       cloudinary.uploader
         .upload_stream(
@@ -44,18 +49,17 @@ export async function POST(request) {
         .end(buffer);
     });
 
-    // Save metadata to MongoDB
     await dbConnect();
-    const doc = await File.create({
+    const doc = await FileModel.create({
       name,
-      originalName,  // ← add this
+      originalName,
       cloudinaryUrl: uploadResult.secure_url,
       publicId: uploadResult.public_id,
-      mimeType: file.type,
-      size: file.size,
+      mimeType,
+      size,
       uploadedAt: new Date(),
     });
-console.log('SAVED DOC:', JSON.stringify(doc.toObject(), null, 2));
+
     return NextResponse.json({ success: true, file: doc });
   } catch (err) {
     console.error('[upload] error:', err);

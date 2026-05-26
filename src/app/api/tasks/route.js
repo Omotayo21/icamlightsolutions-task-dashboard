@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Task from '@/lib/models/Task';
-
+import { getAuthenticatedUser } from '@/lib/auth';
 
 export async function GET(request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month');
@@ -25,11 +30,16 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
     const body = await request.json();
-    const { title, description, assignedStaff, category, week, dueDate, month, createdBy } = body;
+    const { title, description, assignedStaff, category, week, dueDate, month } = body;
 
-    if (!title || !month || !createdBy) {
+    if (!title || !month) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -41,10 +51,8 @@ export async function POST(request) {
       week,
       dueDate,
       month,
-      createdBy
+      createdBy: authUser.name
     });
-
-   
 
     return NextResponse.json(newTask, { status: 201 });
   } catch (error) {
