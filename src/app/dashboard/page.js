@@ -9,12 +9,18 @@ import TaskModal from '@/components/TaskModal';
 import MonthlyGoals from '@/components/MonthlyGoals';
 import Announcements from '@/components/Announcements';
 //import ActivityFeed from '@/components/ActivityFeed';
-import { Plus, ListFilter, ListTodo, Loader2 } from 'lucide-react';
+import { Plus, ListFilter, ListTodo, Loader2, ChevronDown } from 'lucide-react';
 import { WEEKS } from '@/lib/config';
 
 export default function Dashboard() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
+
+  // Timezone-safe default month (YYYY-MM in UTC)
+  const defaultMonthUTC = React.useMemo(() => {
+    const today = new Date();
+    return `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}`;
+  }, []);
 
   // State
   const [tasks, setTasks] = useState([]);
@@ -23,12 +29,26 @@ export default function Dashboard() {
   //const [logs, setLogs] = useState([]);
   const [selectedWeekFilter, setSelectedWeekFilter] = useState('All');
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(defaultMonthUTC);
   
   // Loading indicators
   const [loadingData, setLoadingData] = useState(true);
   const [togglingTaskId, setTogglingTaskId] = useState(null);
   const [isSavingTask, setIsSavingTask] = useState(false);
   const [isEditingTaskId, setIsEditingTaskId] = useState(null);
+
+  // Generate month options from 12 months in the past to 2 months in the future
+  const monthOptions = React.useMemo(() => {
+    const options = [];
+    const today = new Date();
+    for (let i = -12; i <= 2; i++) {
+      const d = new Date(today.getUTCFullYear(), today.getUTCMonth() + i, 1);
+      const val = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+      options.push({ val, label });
+    }
+    return options;
+  }, []);
 
   // Redirection if not logged in
   useEffect(() => {
@@ -38,19 +58,17 @@ export default function Dashboard() {
   }, [user, userLoading, router]);
 
   // Fetch all dashboard data
-  const fetchData = async (showLocalSpinner = false) => {
+  const fetchData = async (showLocalSpinner = false, monthToFetch = selectedMonth) => {
     if (!user) return;
     try {
       if (!showLocalSpinner) setLoadingData(true);
-      const today = new Date();
-      const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 
       // Fetch active tasks
-      const resActive = await fetch(`/api/tasks?month=${currentMonth}&isArchived=false`);
+      const resActive = await fetch(`/api/tasks?month=${monthToFetch}&isArchived=false`);
       const activeData = await resActive.json();
 
       // Fetch goals
-      const resGoals = await fetch(`/api/goals?month=${currentMonth}`);
+      const resGoals = await fetch(`/api/goals?month=${monthToFetch}`);
       const goalsData = await resGoals.json();
 
       // Fetch announcements
@@ -58,7 +76,7 @@ export default function Dashboard() {
       const annData = await resAnn.json();
 
       // Fetch activity logs
-     /* const resLogs = await fetch('/api/logs');
+      /* const resLogs = await fetch('/api/logs');
       const logsData = await resLogs.json(); */
 
       setTasks(Array.isArray(activeData) ? activeData : []);
@@ -74,9 +92,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (user) {
-      fetchData();
+      fetchData(false, selectedMonth);
     }
-  }, [user]);
+  }, [user, selectedMonth]);
 
   // Save Task
   const handleSaveTask = async (taskData) => {
@@ -88,7 +106,7 @@ export default function Dashboard() {
         body: JSON.stringify(taskData)
       });
       if (res.ok) {
-        await fetchData(true);
+        await fetchData(true, selectedMonth);
       }
     } catch (e) {
       console.error(e);
@@ -108,7 +126,7 @@ export default function Dashboard() {
         body: JSON.stringify({ status: newStatus })
       });
       if (res.ok) {
-        await fetchData(true);
+        await fetchData(true, selectedMonth);
       }
     } catch (e) {
       console.error(e);
@@ -127,7 +145,7 @@ export default function Dashboard() {
         body: JSON.stringify(fields)
       });
       if (res.ok) {
-        await fetchData(true);
+        await fetchData(true, selectedMonth);
       }
     } catch (e) {
       console.error(e);
@@ -138,15 +156,13 @@ export default function Dashboard() {
 
   // Add Monthly Goal
   const handleAddGoal = async (title) => {
-    const today = new Date();
-    const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     const res = await fetch('/api/goals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, month: currentMonth, createdBy: user })
+      body: JSON.stringify({ title, month: selectedMonth, createdBy: user })
     });
     if (res.ok) {
-      await fetchData(true);
+      await fetchData(true, selectedMonth);
     }
   };
 
@@ -158,7 +174,7 @@ export default function Dashboard() {
       body: JSON.stringify({ id: goalId, status: currentStatus, updatedBy: user })
     });
     if (res.ok) {
-      await fetchData(true);
+      await fetchData(true, selectedMonth);
     }
   };
 
@@ -243,14 +259,29 @@ export default function Dashboard() {
             )}
 
             {/* Task Workspace Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-              <h2 className="text-base font-bold text-slate-800 flex items-center">
-                <ListTodo className="w-4 h-4 mr-1.5 text-blue-600" />
-                Operational Tasks
-              </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 mb-4 gap-3">
+              <div className="flex items-center space-x-3">
+                <h2 className="text-base font-bold text-slate-800 flex items-center">
+                  <ListTodo className="w-4 h-4 mr-1.5 text-blue-600" />
+                  Operational Tasks
+                </h2>
+                {/* Month Dropdown Selector */}
+                <div className="relative inline-flex items-center">
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="text-xs font-bold pl-2.5 pr-8 py-1.5 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer hover:bg-slate-100 transition-colors"
+                  >
+                    {monthOptions.map((opt) => (
+                      <option key={opt.val} value={opt.val}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 pointer-events-none" />
+                </div>
+              </div>
               <button
                 onClick={() => setIsTaskModalOpen(true)}
-                className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors"
+                className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors self-start sm:self-auto"
               >
                 <Plus className="w-4 h-4 mr-1" />
                 Add Task
@@ -330,6 +361,7 @@ export default function Dashboard() {
         onClose={() => setIsTaskModalOpen(false)}
         onSave={handleSaveTask}
         activeUser={user}
+        defaultMonth={selectedMonth}
       />
     </DashboardLayout>
   );

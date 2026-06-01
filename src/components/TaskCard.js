@@ -70,7 +70,11 @@ export default function TaskCard({ task, onUpdateStatus, onEditTask }) {
   const formatDate = (dateStr) => {
     if (!dateStr) return null;
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      timeZone: 'UTC'
+    });
   };
 
   return (

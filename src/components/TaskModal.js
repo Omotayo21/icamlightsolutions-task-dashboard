@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { X, Calendar, Users, AlertCircle, Plus, XCircle } from 'lucide-react';
 import { CATEGORIES, WEEKS } from '../lib/config';
 
-export default function TaskModal({ isOpen, onClose, onSave, activeUser }) {
+export default function TaskModal({ isOpen, onClose, onSave, activeUser, defaultMonth }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignedStaff, setAssignedStaff] = useState([]);
@@ -43,7 +43,7 @@ export default function TaskModal({ isOpen, onClose, onSave, activeUser }) {
     }
 
     const todayObj = new Date();
-    const month = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}`;
+    const month = defaultMonth || `${todayObj.getUTCFullYear()}-${String(todayObj.getUTCMonth() + 1).padStart(2, '0')}`;
 
     onSave({
       title: title.trim(),

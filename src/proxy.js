@@ -4,7 +4,7 @@ import { verifyToken } from '@/lib/auth';
 // Routes that don't require authentication
 const PUBLIC_ROUTES = ['/', '/signup', '/api/auth/login', '/api/auth/signup', '/api/auth/me'];
 
-export function middleware(request) {
+export function proxy(request) {
   const { pathname } = request.nextUrl;
 
   // Allow public routes
@@ -34,7 +34,4 @@ export function middleware(request) {
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|_next/image|favicon.ico).*)'],
-  // Middleware runs in Edge by default. `jsonwebtoken` can fail in Edge,
-  // which makes valid tokens appear invalid and causes 401 loops.
-  runtime: 'nodejs'
 };
